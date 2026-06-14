@@ -8,11 +8,14 @@ import ExpensesScreen from "./ExpensesScreen";
 const PROFILE = {
   name: "Ghazale",
   role: "Data Engineer · NTT DATA Italia · Rome",
-  exam: { name: "AZ-900", date: "2025-09-30" },
-  goals: ["Data Architect", "Germany June/July 2027", "€100–130k by 2030", "German passport 2032"],
+  exams: [
+    { name: "AZ-900", date: "2025-09-30" },
+    { name: "IELTS", date: "2026-11-30" },
+  ],
+  goals: ["Data Architect", "IELTS by November 2026", "Germany June/July 2027", "€100–130k by 2030", "German passport 2032"],
   vision: [
     { year: "Now", label: "AZ-900 + Build Platform", salary: null, active: true },
-    { year: "2026", label: "Senior DE skills + GitHub portfolio", salary: null },
+    { year: "2026", label: "Senior DE skills + IELTS (Nov) + GitHub portfolio", salary: null },
     { year: "2027", label: "Move to Germany 🇩🇪 Blue Card", salary: "€65–75k" },
     { year: "2028", label: "Lead DE / Data Architect", salary: "€90–100k" },
     { year: "2030", label: "Senior Architect · Stable life in Germany", salary: "€100–130k" },
@@ -75,6 +78,18 @@ const WEEKLY_TASKS = [
     how: "Open Duolingo app → German course. Do one lesson every day — morning, before bed, whenever. Set a daily reminder. The streak is the goal — don't break it.",
     resource: "duolingo.com/learn — German course (free)",
   },
+  {
+    id: 10, track: "ielts", text: "IELTS: Listening or Reading — one full practice test",
+    time: "1 hr", weekend: true,
+    how: "Go to ielts.org or the British Council site → free practice tests. Do one Listening or Reading test under timed conditions. Check your score and review every wrong answer.",
+    resource: "ielts.org — free practice tests",
+  },
+  {
+    id: 11, track: "ielts", text: "IELTS: Writing Task 2 — practice essay",
+    time: "1 hr", weekend: true,
+    how: "Pick a Task 2 question from ielts-up.com. Write a full essay in 40 minutes. Compare against a model answer — check structure, vocabulary, and word count.",
+    resource: "ielts-up.com — free Task 2 questions and model answers",
+  },
 ];
 
 const TRACKS = [
@@ -84,31 +99,37 @@ const TRACKS = [
     resources: ["learn.microsoft.com/azure", "John Savill AZ-900 on YouTube", "Whizlabs practice exams ($15)"],
     habit: "3 hrs every Saturday — this is your weekend priority until September",
   },
-  { id: "python", label: "Python + JSON", color: T.accent, icon: "🐍", priority: 2, deadline: "Parallel — ongoing",
+  { id: "ielts", label: "IELTS", color: T.purple, icon: "🗣️", priority: 2, deadline: "November 2026", weekend: true,
+    monthly: "Reach target IELTS band score (7.0+)",
+    steps: ["Diagnostic test — find your current band score", "Listening + Reading — daily practice tests", "Writing — Task 1 & Task 2, get feedback on structure", "Speaking — practice with a partner or record yourself", "Book and sit the exam"],
+    resources: ["ielts.org — official practice materials (free)", "British Council IELTS prep", "ielts-up.com — free writing/speaking samples"],
+    habit: "30 min every Sunday — IELTS practice until November",
+  },
+  { id: "python", label: "Python + JSON", color: T.accent, icon: "🐍", priority: 3, deadline: "Parallel — ongoing",
     monthly: "Automate 2 real NTT DATA tasks in Python",
     steps: ["Write first Oracle connection script — cx_Oracle + SQLAlchemy", "JSON: read, write, parse any API response", "Automate one manual daily task", "Push everything to GitHub (ensranjbar)"],
     resources: ["realpython.com — articles not courses", "python-oracledb.readthedocs.io", "docs.python.org/3/library/json.html"],
     habit: "Build something real every weekday session — even 1 function counts",
   },
-  { id: "aibuilder", label: "AI Builder", color: T.purple, icon: "🤖", priority: 3, deadline: "Parallel — ongoing",
+  { id: "aibuilder", label: "AI Builder", color: T.purple, icon: "🤖", priority: 4, deadline: "Parallel — ongoing",
     monthly: "Explain every part of your platform — no black boxes",
     steps: ["Read every line Claude writes — explain it out loud", "Ask Claude: 'what are 3 ways to architect this? trade-offs?'", "One feature per week built WITHOUT Claude", "Document every architectural decision you make"],
     resources: ["platform.openai.com/docs/quickstart", "docs.streamlit.io/get-started", "cookbook.openai.com"],
     habit: "After every Claude session: spend 10 min reading what it wrote and understanding it",
   },
-  { id: "germany", label: "Germany 2027", color: T.green, icon: "🇩🇪", priority: 4, deadline: "Apply mid 2026 · Move June/July 2027",
+  { id: "germany", label: "Germany 2027", color: T.green, icon: "🇩🇪", priority: 5, deadline: "Apply mid 2026 · Move June/July 2027",
     monthly: "German A1 progress + CV updated with latest project",
     steps: ["15 min German daily — Duolingo + Pimsleur on any walk", "Every GitHub commit and README in English", "Monthly: update CV with new skill or project", "Research Blue Card requirements at bamf.de"],
     resources: ["duolingo.com/german", "pimsleur.com/learn-german", "bamf.de/EN/blue-card", "stepstone.de"],
     habit: "German 15 min/day — on walks, before bed, whenever. Non-negotiable.",
   },
-  { id: "automate", label: "Automate Work", color: T.gold, icon: "⚡", priority: 5, deadline: "Start month 2",
+  { id: "automate", label: "Automate Work", color: T.gold, icon: "⚡", priority: 6, deadline: "Start month 2",
     monthly: "2 scripts saving real time at NTT DATA",
     steps: ["List every manual task you do more than once a week", "Automate the most painful one in Python", "Add Excel output with openpyxl — stakeholders love Excel", "Push to private GitHub — note how much time it saves"],
     resources: ["openpyxl.readthedocs.io", "pypi.org/project/schedule", "docs.python.org/3/library/smtplib.html"],
     habit: "Once a week: pick one manual thing at work and ask 'can I script this?'",
   },
-  { id: "architect", label: "Architect Thinking", color: "#9E6B4A", icon: "🏛️", priority: 6, deadline: "Long term — build the habit now",
+  { id: "architect", label: "Architect Thinking", color: "#9E6B4A", icon: "🏛️", priority: 7, deadline: "Long term — build the habit now",
     monthly: "4 decisions logged · 1 system design practiced",
     steps: ["Every project: write WHY you chose X over Y", "Read 1 chapter of DDIA (Designing Data-Intensive Applications) weekly", "OCI migration: document what breaks and how you fixed it", "One LinkedIn post/month in English about what you built"],
     resources: ["Designing Data-Intensive Applications — Kleppmann (the architect book)", "System Design Interview — Alex Xu", "app.diagrams.net (free architecture diagrams)"],
@@ -140,12 +161,18 @@ function journeyPercent() {
   return Math.min(100, Math.max(0, Math.round(((now - start) / (end - start)) * 100)));
 }
 
+function nextExam() {
+  const upcoming = PROFILE.exams.filter(e => daysUntil(e.date) >= 0).sort((a, b) => daysUntil(a.date) - daysUntil(b.date));
+  return upcoming[0] || PROFILE.exams[PROFILE.exams.length - 1];
+}
+
 // ─── HOME ─────────────────────────────────────────────────────────────────────
 
 function HomeScreen({ logs, setLogs, checklist }) {
   const today = new Date().toISOString().split("T")[0];
   const todayLog = logs[today] || { mood: null, hours: 0 };
-  const examDays = daysUntil(PROFILE.exam.date);
+  const exam = nextExam();
+  const examDays = daysUntil(exam.date);
   const weekKey = getWeekKey();
   const weekTasks = checklist.filter(t => t.week === weekKey);
   const doneTasks = weekTasks.filter(t => t.done).length;
@@ -185,7 +212,7 @@ function HomeScreen({ logs, setLogs, checklist }) {
       {/* Key stats */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 24 }}>
         {[
-          { label: "Days to AZ-900", value: examDays, color: T.blue, bg: T.blueLight },
+          { label: `Days to ${exam.name}`, value: examDays, color: T.blue, bg: T.blueLight },
           { label: "This week", value: `${doneTasks}/${weekTasks.length}`, color: T.green, bg: T.greenLight, suffix: "tasks" },
           { label: "Today", value: todayLog.hours || 0, color: T.accent, bg: T.accentLight, suffix: "hrs" },
         ].map((s, i) => (
@@ -450,6 +477,7 @@ function ChecklistScreen({ checklist, setChecklist }) {
 function ProgressScreen({ logs }) {
   const totalHours = Object.values(logs).reduce((s, d) => s + (d.hours || 0), 0);
   const activeDays = Object.keys(logs).filter(k => logs[k].hours > 0).length;
+  const exam = nextExam();
 
   const weeklyData = Array.from({ length: 12 }, (_, i) => {
     const d = new Date(); d.setDate(d.getDate() - (11 - i) * 7);
@@ -488,7 +516,7 @@ function ProgressScreen({ logs }) {
         {[
           { label: "Total hours", value: totalHours.toFixed(1), suffix: "hrs", color: T.accent, bg: T.accentLight },
           { label: "Active days", value: activeDays, suffix: "days", color: T.green, bg: T.greenLight },
-          { label: "AZ-900 exam", value: daysUntil(PROFILE.exam.date), suffix: "days left", color: T.blue, bg: T.blueLight },
+          { label: `${exam.name} exam`, value: exam.date ? daysUntil(exam.date) : "—", suffix: "days left", color: T.blue, bg: T.blueLight },
           { label: "Germany move", value: "June", suffix: "2027", color: T.purple, bg: T.purpleLight },
         ].map((s, i) => (
           <div key={i} style={{ background: s.bg, borderRadius: 12, padding: "16px", textAlign: "center" }}>
@@ -621,8 +649,8 @@ Write a clean, professional CV in English with German Lebenslauf structure. Incl
 3. Skills (technical: Oracle, Python, OCI, Azure (AZ-900), AI/LLM integration; soft: bridge between legacy and modern systems)
 4. Education
 5. Projects (GitHub: ensranjbar — list what's there)
-6. Languages (Italian native, English professional, German A1 learning)
-7. Certifications (AZ-900 in progress — September 2025)
+6. Languages (Italian native, English professional — IELTS scheduled November 2026, German A1 learning)
+7. Certifications (AZ-900 in progress — September 2025; IELTS — November 2026)
 
 Make it honest — only include what she has actually done. Make it confident — she has real experience with Oracle, data migration, and AI integration. Format cleanly with clear sections.`;
   };
@@ -717,7 +745,7 @@ function ChatScreen({ logs, checklist }) {
   const doneTasks = checklist.filter(t => t.done).length;
   const [messages, setMessages] = useState([{
     role: "assistant",
-    text: `Hi Ghazale 👋\n\nI'm your personal learning coach. I know where you are and where you're going:\n\n🎯 AZ-900 in ${daysUntil(PROFILE.exam.date)} days\n📊 ${totalHours.toFixed(1)} study hours logged so far\n✅ ${doneTasks} tasks completed\n🇩🇪 Germany — June/July 2027\n🏛️ German passport — 2032\n💼 Target: Data Architect, €100–130k\n\nTell me how you're doing. Ask me anything — new ideas, feeling overwhelmed, want to add something to your plan, or just need a check-in.`,
+    text: `Hi Ghazale 👋\n\nI'm your personal learning coach. I know where you are and where you're going:\n\n🎯 ${nextExam().name} in ${daysUntil(nextExam().date)} days\n📊 ${totalHours.toFixed(1)} study hours logged so far\n✅ ${doneTasks} tasks completed\n🇩🇪 Germany — June/July 2027\n🏛️ German passport — 2032\n💼 Target: Data Architect, €100–130k\n\nTell me how you're doing. Ask me anything — new ideas, feeling overwhelmed, want to add something to your plan, or just need a check-in.`,
   }]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -735,12 +763,13 @@ PROFILE:
 - Gap: uses AI to build but wants to understand the architecture she's creating
 
 GOALS (priority order):
-1. AZ-900 Azure Fundamentals — September 2025 (${daysUntil(PROFILE.exam.date)} days away)
-2. Python + JSON mastery — through building, not courses
-3. AI as builder tool — understand everything she builds
-4. Germany move — June/July 2027 — Blue Card
-5. Automate daily NTT DATA work
-6. Data Architect thinking — document every decision
+1. AZ-900 Azure Fundamentals — September 2025
+2. IELTS — November 2026 (${daysUntil("2026-11-30")} days away)
+3. Python + JSON mastery — through building, not courses
+4. AI as builder tool — understand everything she builds
+5. Germany move — June/July 2027 — Blue Card
+6. Automate daily NTT DATA work
+7. Data Architect thinking — document every decision
 
 LONG TERM: Data Architect, €100–130k, fluent English + German, German passport 2032
 
