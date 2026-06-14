@@ -14,6 +14,7 @@ const fieldStyle = { padding: "10px 12px", border: `1px solid ${T.border}`, bord
 export default function ExpensesScreen() {
   const [expenses, setExpenses] = useState(() => load("expenses", []));
   const [budgets, setBudgets] = useState(() => load("budgets", {}));
+  const [viewMode, setViewMode] = useState("all");
   const [month, setMonth] = useState(monthStr());
   const [form, setForm] = useState({ date: todayStr(), category: DEFAULT_CATEGORIES[0], amount: "", note: "" });
   const [newCategory, setNewCategory] = useState("");
@@ -74,17 +75,20 @@ export default function ExpensesScreen() {
     if (fileRef.current) fileRef.current.value = "";
   };
 
-  const monthExpenses = useMemo(() => expenses.filter(e => e.date?.startsWith(month)), [expenses, month]);
-  const totalSpent = monthExpenses.reduce((s, e) => s + e.amount, 0);
+  const filteredExpenses = useMemo(
+    () => viewMode === "all" ? expenses : expenses.filter(e => e.date?.startsWith(month)),
+    [expenses, month, viewMode]
+  );
+  const totalSpent = filteredExpenses.reduce((s, e) => s + e.amount, 0);
   const totalBudget = Object.values(budgets).reduce((s, v) => s + (v || 0), 0);
   const diff = totalBudget - totalSpent;
 
   const chartData = useMemo(() => {
     const byCategory = {};
-    monthExpenses.forEach(e => { byCategory[e.category] = (byCategory[e.category] || 0) + e.amount; });
+    filteredExpenses.forEach(e => { byCategory[e.category] = (byCategory[e.category] || 0) + e.amount; });
     const cats = new Set([...Object.keys(budgets).filter(c => budgets[c] > 0), ...Object.keys(byCategory)]);
     return Array.from(cats).map(c => ({ category: c, expected: budgets[c] || 0, actual: Math.round((byCategory[c] || 0) * 100) / 100 }));
-  }, [monthExpenses, budgets]);
+  }, [filteredExpenses, budgets]);
 
   const sortedExpenses = useMemo(() => [...expenses].sort((a, b) => (b.date || "").localeCompare(a.date || "")), [expenses]);
 
@@ -105,15 +109,30 @@ export default function ExpensesScreen() {
         <div style={{ ...S.body, marginTop: 4 }}>Track spending, set expected budgets per category, and import from Excel.</div>
       </div>
 
+      {/* View mode: all time vs a specific month */}
+      <div style={{ marginBottom: 16, display: "flex", gap: 8 }}>
+        {[{ id: "all", label: "All time" }, { id: "month", label: "By month" }].map(opt => (
+          <button key={opt.id} onClick={() => setViewMode(opt.id)} style={{
+            padding: "8px 16px", borderRadius: 8, border: `1px solid ${viewMode === opt.id ? T.accent : T.border}`,
+            background: viewMode === opt.id ? T.accentLight : T.bgCard,
+            color: viewMode === opt.id ? T.accent : T.textMid,
+            cursor: "pointer", fontSize: 13, fontWeight: viewMode === opt.id ? 600 : 400,
+          }}>{opt.label}</button>
+        ))}
+        {viewMode === "month" && (
+          <input type="month" value={month} onChange={e => setMonth(e.target.value)} style={{ ...fieldStyle, flex: 1 }} />
+        )}
+      </div>
+
       {/* Summary */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 24 }}>
         <div style={{ background: T.accentLight, borderRadius: 12, padding: "14px 12px", textAlign: "center" }}>
           <div style={{ fontSize: 20, fontWeight: 800, color: T.accent }}>€{totalSpent.toFixed(2)}</div>
-          <div style={{ ...S.small, marginTop: 4 }}>Spent this month</div>
+          <div style={{ ...S.small, marginTop: 4 }}>Spent {viewMode === "all" ? "(all time)" : "this month"}</div>
         </div>
         <div style={{ background: T.blueLight, borderRadius: 12, padding: "14px 12px", textAlign: "center" }}>
           <div style={{ fontSize: 20, fontWeight: 800, color: T.blue }}>€{totalBudget.toFixed(2)}</div>
-          <div style={{ ...S.small, marginTop: 4 }}>Expected budget</div>
+          <div style={{ ...S.small, marginTop: 4 }}>Expected budget (monthly)</div>
         </div>
         <div style={{ background: diff >= 0 ? T.greenLight : T.accentLight, borderRadius: 12, padding: "14px 12px", textAlign: "center" }}>
           <div style={{ fontSize: 20, fontWeight: 800, color: diff >= 0 ? T.green : T.accent }}>{diff >= 0 ? "+" : ""}€{diff.toFixed(2)}</div>
@@ -121,15 +140,9 @@ export default function ExpensesScreen() {
         </div>
       </div>
 
-      {/* Month picker */}
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ ...S.label, marginBottom: 8 }}>Month</div>
-        <input type="month" value={month} onChange={e => setMonth(e.target.value)} style={{ ...fieldStyle, width: "100%", boxSizing: "border-box" }} />
-      </div>
-
       {/* Chart: expected vs actual */}
       <div style={{ marginBottom: 28 }}>
-        <div style={{ ...S.label, marginBottom: 14 }}>Expected vs actual spend by category</div>
+        <div style={{ ...S.label, marginBottom: 14 }}>Expected vs actual spend by category{viewMode === "all" ? " (all time)" : ""}</div>
         {chartData.length === 0 ? (
           <div style={{ ...S.body, padding: "16px 0", textAlign: "center" }}>Add expenses or set budgets to see this chart.</div>
         ) : (
