@@ -216,7 +216,7 @@ export default function ExpensesScreen() {
       {/* Excel upload */}
       <div style={{ marginBottom: 24 }}>
         <div style={{ ...S.label, marginBottom: 12 }}>Or import from Excel / CSV</div>
-        <div style={{ ...S.small, marginBottom: 8 }}>File should have columns like Date, Category, Amount, Note.</div>
+        <div style={{ ...S.small, marginBottom: 8 }}>File should have columns like Date, Category, Amount, Note. All sheets/tabs in the file are read.</div>
         <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleFile} disabled={importing} style={{ ...fieldStyle, width: "100%", boxSizing: "border-box" }} />
         {importMsg && <div style={{ ...S.body, marginTop: 8 }}>{importMsg}</div>}
       </div>

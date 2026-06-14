@@ -57,30 +57,40 @@ function matchHeader(headers, keys) {
   });
 }
 
-// Parses an .xlsx/.xls/.csv file into an array of { date, category, amount, note }
+// Parses an .xlsx/.xls/.csv file into an array of { date, category, amount, note }.
+// Reads every sheet in the workbook (not just the first) and merges the results,
+// since expense workbooks are often split across monthly or per-account tabs.
 export async function parseExpensesExcel(file) {
   const XLSX = await import("xlsx");
   const buf = await readArrayBuffer(file);
   const workbook = XLSX.read(buf, { type: "array", cellDates: true });
-  const sheet = workbook.Sheets[workbook.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
-  if (rows.length === 0) return [];
+  const result = [];
+  for (const sheetName of workbook.SheetNames) {
+    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: "" });
+    if (rows.length === 0) continue;
 
-  const headers = Object.keys(rows[0]);
-  const dateCol = matchHeader(headers, HEADER_KEYS.date);
-  const categoryCol = matchHeader(headers, HEADER_KEYS.category);
-  const amountCol = matchHeader(headers, HEADER_KEYS.amount);
-  const noteCol = matchHeader(headers, HEADER_KEYS.note);
+    const headers = Object.keys(rows[0]);
+    const dateCol = matchHeader(headers, HEADER_KEYS.date);
+    const categoryCol = matchHeader(headers, HEADER_KEYS.category);
+    const amountCol = matchHeader(headers, HEADER_KEYS.amount);
+    const noteCol = matchHeader(headers, HEADER_KEYS.note);
 
-  return rows
-    .map(row => ({
-      date: dateCol ? toIsoDate(row[dateCol]) : "",
-      category: categoryCol ? String(row[categoryCol]).trim() : "Other",
-      amount: amountCol ? toAmount(row[amountCol]) : 0,
-      note: noteCol ? String(row[noteCol]).trim() : "",
-    }))
-    .filter(e => e.amount !== 0 || e.category !== "Other" || e.date);
+    // Skip sheets that don't look like expense data at all.
+    if (!dateCol && !amountCol) continue;
+
+    rows
+      .map(row => ({
+        date: dateCol ? toIsoDate(row[dateCol]) : "",
+        category: categoryCol ? String(row[categoryCol]).trim() : sheetName,
+        amount: amountCol ? toAmount(row[amountCol]) : 0,
+        note: noteCol ? String(row[noteCol]).trim() : "",
+      }))
+      .filter(e => e.amount !== 0 || e.date)
+      .forEach(e => result.push(e));
+  }
+
+  return result;
 }
 
 // Extracts plain text from a CV file (.txt, .md, .pdf, .docx)
