@@ -1,29 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
-
-// ─── DESIGN TOKENS ────────────────────────────────────────────────────────────
-const T = {
-  bg: "#FAFAF8",
-  bgCard: "#FFFFFF",
-  bgMuted: "#F4F1EC",
-  border: "#E8E4DC",
-  text: "#1A1A1A",
-  textMid: "#6B6B6B",
-  textLight: "#9E9E9E",
-  accent: "#E8643A",
-  accentLight: "#FDF1EC",
-  accentBorder: "#F5C4B0",
-  green: "#5A9470",
-  greenLight: "#EEF5F1",
-  greenBorder: "#B8D8C4",
-  blue: "#4A7FC1",
-  blueLight: "#EEF3FA",
-  blueBorder: "#B8CFEA",
-  purple: "#7B5EA7",
-  purpleLight: "#F3EEF9",
-  gold: "#C49A3C",
-  goldLight: "#FDF7EC",
-};
+import { T, S, Pill, Divider, ProgressBar, load, save } from "./shared";
+import { extractTextFromFile } from "./fileParsers";
+import ExpensesScreen from "./ExpensesScreen";
 
 // ─── DATA ─────────────────────────────────────────────────────────────────────
 const PROFILE = {
@@ -146,9 +125,6 @@ const MOODS = [
   { id: "down", label: "💙 Down", advice: "You are building something real. Most people never start. You have projects on GitHub, an exam coming, and a plan to move to Germany. That's not small — that's enormous." },
 ];
 
-const load = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } };
-const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
-
 function getWeekKey() {
   const d = new Date(), y = d.getFullYear();
   const start = new Date(y, 0, 1);
@@ -162,36 +138,6 @@ function daysUntil(dateStr) {
 function journeyPercent() {
   const start = new Date("2025-06-01"), end = new Date("2027-07-01"), now = new Date();
   return Math.min(100, Math.max(0, Math.round(((now - start) / (end - start)) * 100)));
-}
-
-// ─── SHARED UI ────────────────────────────────────────────────────────────────
-
-const S = {
-  label: { fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: T.textLight },
-  h2: { fontSize: 18, fontWeight: 700, color: T.text, margin: 0 },
-  h3: { fontSize: 15, fontWeight: 600, color: T.text, margin: 0 },
-  body: { fontSize: 14, color: T.textMid, lineHeight: 1.6 },
-  small: { fontSize: 12, color: T.textLight, lineHeight: 1.5 },
-};
-
-function Pill({ children, color, bg, border }) {
-  return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: bg || T.accentLight, color: color || T.accent, border: `1px solid ${border || T.accentBorder}`, borderRadius: 20, padding: "3px 10px", fontSize: 12, fontWeight: 500 }}>
-      {children}
-    </span>
-  );
-}
-
-function Divider() {
-  return <div style={{ height: 1, background: T.border, margin: "20px 0" }} />;
-}
-
-function ProgressBar({ value, color, height = 6 }) {
-  return (
-    <div style={{ background: T.bgMuted, borderRadius: 999, height, overflow: "hidden" }}>
-      <div style={{ height: "100%", width: `${value}%`, background: color || T.accent, borderRadius: 999, transition: "width 0.6s ease" }} />
-    </div>
-  );
 }
 
 // ─── HOME ─────────────────────────────────────────────────────────────────────
@@ -620,10 +566,32 @@ function CVScreen({ logs, checklist }) {
   const [generatedCV, setGeneratedCV] = useState(() => load("generatedCV", ""));
   const [loading, setLoading] = useState(false);
   const [period, setPeriod] = useState("3mo");
+  const [uploading, setUploading] = useState(false);
+  const [uploadMsg, setUploadMsg] = useState("");
   const totalHours = Object.values(logs).reduce((s, d) => s + (d.hours || 0), 0);
   const doneTasks = checklist.filter(t => t.done).length;
 
   const saveCV = (val) => { setCurrentCV(val); save("currentCV", val); };
+
+  const handleCVFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setUploadMsg("Reading file...");
+    try {
+      const text = await extractTextFromFile(file);
+      if (!text) {
+        setUploadMsg("Couldn't find any text in that file.");
+      } else {
+        saveCV(text);
+        setUploadMsg(`Loaded "${file.name}".`);
+      }
+    } catch {
+      setUploadMsg("Couldn't read that file. Supported: .txt, .md, .pdf, .docx");
+    }
+    setUploading(false);
+    e.target.value = "";
+  };
 
   const buildPrompt = () => {
     const periodLabel = { "3mo": "3 months", "6mo": "6 months", "1yr": "1 year" }[period];
@@ -692,6 +660,13 @@ Make it honest — only include what she has actually done. Make it confident �
           placeholder="Paste your current CV here, or leave empty — I already know your profile from NTT DATA, Oracle, PL/SQL, OCI migration, AI platform..."
           style={{ width: "100%", minHeight: 120, padding: "12px 14px", border: `1px solid ${T.border}`, borderRadius: 10, background: T.bgCard, color: T.text, fontSize: 13, resize: "vertical", outline: "none", boxSizing: "border-box", fontFamily: "inherit", lineHeight: 1.6 }}
         />
+        <div style={{ marginTop: 8 }}>
+          <div style={{ ...S.small, marginBottom: 6 }}>Or upload your CV (.pdf, .docx, .txt, .md) to fill the box above</div>
+          <input type="file" accept=".pdf,.docx,.txt,.md" onChange={handleCVFile} disabled={uploading}
+            style={{ width: "100%", padding: "10px 12px", border: `1px solid ${T.border}`, borderRadius: 8, background: T.bgCard, color: T.text, fontSize: 13, outline: "none", boxSizing: "border-box", fontFamily: "inherit" }}
+          />
+          {uploadMsg && <div style={{ ...S.body, marginTop: 6 }}>{uploadMsg}</div>}
+        </div>
       </div>
 
       <div style={{ marginBottom: 20 }}>
@@ -857,6 +832,7 @@ const TABS = [
   { id: "plan", label: "Plan" },
   { id: "week", label: "Week" },
   { id: "progress", label: "Progress" },
+  { id: "expenses", label: "Expenses" },
   { id: "cv", label: "CV" },
   { id: "coach", label: "Coach" },
 ];
@@ -893,6 +869,7 @@ export default function GrowthOS() {
         {screen === "plan" && <PlanScreen />}
         {screen === "week" && <ChecklistScreen checklist={checklist} setChecklist={setChecklist} />}
         {screen === "progress" && <ProgressScreen logs={logs} />}
+        {screen === "expenses" && <ExpensesScreen />}
         {screen === "cv" && <CVScreen logs={logs} checklist={checklist} />}
         {screen === "coach" && <ChatScreen logs={logs} checklist={checklist} />}
       </div>
