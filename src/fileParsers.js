@@ -46,7 +46,7 @@ function toAmount(val) {
 const HEADER_KEYS = {
   date: ["date", "data", "day", "giorno"],
   category: ["category", "categoria", "type", "tipo", "group"],
-  amount: ["amount", "spent", "spesa", "cost", "price", "importo", "value", "total", "totale"],
+  amount: ["amount", "spent", "spesa", "spese", "uscita", "uscite", "cost", "price", "importo", "value", "total", "totale"],
   note: ["note", "notes", "description", "desc", "memo", "details", "descrizione"],
 };
 
@@ -55,6 +55,45 @@ function matchHeader(headers, keys) {
     const lower = h.toLowerCase().trim();
     return keys.some(k => lower.includes(k));
   });
+}
+
+// Heuristics used to find the date/amount columns when header names don't
+// match any known keyword (e.g. different language or custom labels).
+function looksLikeDate(val) {
+  if (val instanceof Date && !isNaN(val)) return true;
+  if (typeof val === "string") {
+    const s = val.trim();
+    if (!/\d/.test(s)) return false;
+    if (!/[-/.]/.test(s) && !/^\d{4}$/.test(s)) return false;
+    return !isNaN(new Date(s).getTime());
+  }
+  return false;
+}
+
+function looksLikeAmount(val) {
+  if (typeof val === "number") return true;
+  if (typeof val === "string") {
+    const s = val.trim();
+    if (!s) return false;
+    const cleaned = s.replace(/[^0-9.,-]/g, "");
+    if (!/\d/.test(cleaned)) return false;
+    return !isNaN(parseFloat(cleaned.replace(",", ".")));
+  }
+  return false;
+}
+
+// Finds the header whose column values mostly satisfy `predicate`, ignoring
+// columns already claimed by another field.
+function detectColumn(rows, headers, predicate, exclude) {
+  let best = null, bestScore = 0;
+  const sample = rows.slice(0, Math.min(rows.length, 20));
+  for (const h of headers) {
+    if (exclude.includes(h)) continue;
+    const matches = sample.filter(r => predicate(r[h])).length;
+    const score = matches / sample.length;
+    if (score > bestScore) { bestScore = score; best = h; }
+  }
+  return bestScore >= 0.6 ? best : null;
 }
 
 // Parses an .xlsx/.xls/.csv file into an array of { date, category, amount, note }.
@@ -71,13 +110,20 @@ export async function parseExpensesExcel(file) {
     if (rows.length === 0) continue;
 
     const headers = Object.keys(rows[0]);
-    const dateCol = matchHeader(headers, HEADER_KEYS.date);
-    const categoryCol = matchHeader(headers, HEADER_KEYS.category);
-    const amountCol = matchHeader(headers, HEADER_KEYS.amount);
-    const noteCol = matchHeader(headers, HEADER_KEYS.note);
+    let dateCol = matchHeader(headers, HEADER_KEYS.date);
+    let categoryCol = matchHeader(headers, HEADER_KEYS.category);
+    let amountCol = matchHeader(headers, HEADER_KEYS.amount);
+    let noteCol = matchHeader(headers, HEADER_KEYS.note);
+
+    // If headers don't match known keywords (different language, custom
+    // labels, etc.), fall back to sniffing column contents.
+    if (!dateCol) dateCol = detectColumn(rows, headers, looksLikeDate, [categoryCol, amountCol, noteCol].filter(Boolean));
+    if (!amountCol) amountCol = detectColumn(rows, headers, looksLikeAmount, [categoryCol, dateCol, noteCol].filter(Boolean));
 
     // Skip sheets that don't look like expense data at all.
     if (!dateCol && !amountCol) continue;
+
+    if (!categoryCol) categoryCol = headers.find(h => ![dateCol, amountCol, noteCol].includes(h)) || null;
 
     rows
       .map(row => ({
