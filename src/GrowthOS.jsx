@@ -690,7 +690,7 @@ Make it honest â€” only include what she has actually done. Make it confident â€
         />
         <div style={{ marginTop: 8 }}>
           <div style={{ ...S.small, marginBottom: 6 }}>Or upload your CV (.pdf, .docx, .txt, .md) to fill the box above</div>
-          <input type="file" accept=".pdf,.docx,.txt,.md" onChange={handleCVFile} disabled={uploading}
+          <input type="file" accept=".pdf,.docx,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown" onChange={handleCVFile} disabled={uploading}
             style={{ width: "100%", padding: "10px 12px", border: `1px solid ${T.border}`, borderRadius: 8, background: T.bgCard, color: T.text, fontSize: 13, outline: "none", boxSizing: "border-box", fontFamily: "inherit" }}
           />
           {uploadMsg && <div style={{ ...S.body, marginTop: 6 }}>{uploadMsg}</div>}
